@@ -39,5 +39,6 @@ class EventDate(Base):
     date = Column(DateTime, nullable=False)  # Exact date or start of interval
     time = Column(String(20), nullable=True)  # Optional time for the date
     end_date = Column(DateTime, nullable=True)  # For intervals
+    end_time = Column(String(20), nullable=True)  # Optional end time for intervals
 
     event = relationship('Event', back_populates='dates')
