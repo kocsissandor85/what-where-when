@@ -20,7 +20,7 @@ class TobaccoTheatreParser(BaseParser):
 
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
-            event_items = soup.find_all('div', class_='evo_event_schema')
+            event_items = soup.find_all('div', class_='eventon_list_event')
 
             if not event_items:
                 print("No events found.")
@@ -43,14 +43,16 @@ class TobaccoTheatreParser(BaseParser):
         """Parse event details from the given HTML."""
         try:
             # Extract primary fields from itemprop attributes
-            url = item.find('a', itemprop='url')['href']
-            json_ld_script = item.find('script', type='application/ld+json').get_text(strip=True).replace('\t', '').replace('\n', '').replace('\r', '')
+            schema = item.find('div', class_='evo_event_schema')
+            url = schema.find('a', itemprop='url')['href']
+            json_ld_script = schema.find('script', type='application/ld+json').get_text(strip=True).replace('\t', '').replace('\n', '').replace('\r', '')
+            description_wrapper = item.find('div', class_='eventon_desc_in')
+            description = description_wrapper.find('p').get_text(strip=True)
 
             if json_ld_script:
                 json_ld_data = json.loads(json_ld_script)
 
                 title = json_ld_data.get('name')
-                description = json_ld_data.get('description')
                 start_date = self._parse_iso_datetime(json_ld_data.get('startDate'))
                 end_date_json = json_ld_data.get('endDate')
                 end_date = self._parse_iso_datetime(end_date_json)
@@ -60,7 +62,7 @@ class TobaccoTheatreParser(BaseParser):
 
                 event = Event(
                     title=title,
-                    description=description.replace(title, '').strip(),
+                    description=description,
                     location=f"{location_name}, {address}",
                     url=url,
                     media_url=image_url
