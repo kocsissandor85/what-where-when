@@ -103,16 +103,19 @@
                                 </button>
                             </div>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-tag"></i></span>
-                                <select id="tagDropdown" class="form-select">
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#tagMappingModal">
+                                    Mappings
+                                </button>
+                                <select id="tagDropdown" class="form-control form-select">
                                     <option value="">Select a tag</option>
                                     <!-- Tag options will be added dynamically -->
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <div class="form-check form-switch h-100 d-flex align-items-center">
                                 <input class="form-check-input" type="checkbox" id="showArchived">
                                 <label class="form-check-label" for="showArchived">Show Archived</label>
@@ -274,6 +277,53 @@
                 </div>
                 <div class="error-details p-3 bg-light">
                     <pre id="errorModalContent" class="mb-0" style="white-space: pre-wrap; word-break: break-word;"></pre>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tag Mapping Modal -->
+<div class="modal fade" id="tagMappingModal" tabindex="-1" aria-labelledby="tagMappingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="tagMappingModalLabel">
+                    <i class="bi bi-tags text-primary me-2"></i>
+                    Tag Mappings
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Add Tag Mapping Form -->
+                <div class="mb-3">
+                    <div class="alert alert-danger d-none" id="addTagMappingErrorAlert" role="alert"></div>
+                    <div class="row g-2">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="sourceTaxInput" placeholder="Source Tag (from parser)">
+                            <input type="text" class="form-control" id="displayTagInput" placeholder="Display Tag">
+                            <button class="btn btn-primary" id="addTagMappingBtn">Add</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tag Mappings Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th>Source Tag</th>
+                            <th>Display Tag</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="tagMappingTableBody">
+                        <!-- Tag mappings will be dynamically inserted here -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
             <div class="modal-footer">

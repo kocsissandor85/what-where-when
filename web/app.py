@@ -56,7 +56,6 @@ def get_events():
         query = session.query(Event).outerjoin(Event.dates)
 
         # Apply tag filter if provided
-
         if tag_filter:
             # First check if this is a display tag with mappings
             mapped_source_tags = []
@@ -69,6 +68,7 @@ def get_events():
             if mapped_source_tags:
                 # Filter by any of the source tags that map to the requested display tag
                 tag_filter_conditions = [Tag.name == source_tag for source_tag in mapped_source_tags]
+                tag_filter_conditions.append(Tag.name == tag_filter)  # Also include the display tag itself
                 query = query.join(event_tags, Event.id == event_tags.c.event_id) \
                     .join(Tag, Tag.id == event_tags.c.tag_id) \
                     .filter(or_(*tag_filter_conditions))

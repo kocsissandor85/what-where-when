@@ -1,6 +1,6 @@
-// Main entry point for the application
 import { EventManagerApp } from './modules/app.js';
 import { ParserHealthComponent } from './modules/parser-health-component.js';
+import { TagMappingUIManager } from './modules/tag-mapping-ui-manager.js';
 
 // Create application instances when the DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
@@ -11,6 +11,10 @@ document.addEventListener('DOMContentLoaded', function() {
   // Initialize the parser health component
   window.parserHealthComponent = new ParserHealthComponent();
   window.parserHealthComponent.init();
+
+  // Initialize the tag mapping UI manager
+  window.tagMappingUIManager = new TagMappingUIManager();
+  window.tagMappingUIManager.loadTagMappings();
 });
 
 // Make updateActionButtons available globally for inline handlers

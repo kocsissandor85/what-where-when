@@ -58,8 +58,8 @@ export class TagManager {
     // Add tag options
     this.tags.forEach(tag => {
       const option = document.createElement('option');
-      option.value = tag.name;
-      option.textContent = tag.name;
+      option.value = tag.display_name;
+      option.textContent = tag.display_name;
       this.elements.tagDropdown.appendChild(option);
     });
   }
@@ -100,7 +100,7 @@ export class TagManager {
     }
 
     return tags.map(tag => `
-      <span class="badge bg-secondary me-1">${this.escapeHTML(tag.name)}</span>
+      <span class="badge bg-secondary me-1">${this.escapeHTML(tag.display_name)}</span>
     `).join('');
   }
 

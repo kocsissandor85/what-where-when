@@ -259,3 +259,30 @@ table td:last-child {
   border-top-right-radius: 0.375rem;
   border-bottom-right-radius: 0.375rem;
 }
+
+
+/* Tag Mapping Modal Styles */
+#tagMappingModal .modal-body {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+#tagMappingModal .table {
+  margin-bottom: 0;
+}
+
+#tagMappingModal .delete-mapping-btn {
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+#tagMappingModal .delete-mapping-btn:hover {
+  opacity: 1;
+}
+
+/* Manage Tag Mappings Button */
+.manage-tag-mappings-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
