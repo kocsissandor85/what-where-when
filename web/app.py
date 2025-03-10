@@ -1,12 +1,13 @@
 import os
 import sys
+from datetime import datetime
 
 # Add the parent directory to the Python path so we can import modules from there
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
-from sqlalchemy import create_engine, desc, or_
+from sqlalchemy import create_engine, desc, or_, and_
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
 from calendar_service import create_calendar_event, setup_credentials
@@ -44,9 +45,11 @@ def get_events():
         sort_by = request.args.get('sort_by', 'title')
         sort_dir = request.args.get('sort_dir', 'asc')
         include_archived = request.args.get('include_archived', 'false').lower() == 'true'
+        date_start = request.args.get('date_start')
+        date_end = request.args.get('date_end')
 
-        # Base query
-        query = session.query(Event)
+        # Base query with joins
+        query = session.query(Event).outerjoin(Event.dates)
 
         # Apply filters
         if filter_text:
@@ -61,38 +64,65 @@ def get_events():
         if not include_archived:
             query = query.filter(Event.archived == False)
 
-        # Apply sorting
-        if sort_dir == 'desc':
-            query = query.order_by(desc(getattr(Event, sort_by)))
-        else:
-            query = query.order_by(getattr(Event, sort_by))
+        # Apply date range filter if provided
+        if date_start and date_end:
+            try:
+                start_date = datetime.strptime(date_start, '%Y-%m-%d')
+                end_date = datetime.strptime(date_end, '%Y-%m-%d')
 
-        # Execute query and convert to list of dictionaries
+                # Filter events where:
+                # - An event starts within the range (date >= start_date AND date <= end_date)
+                # - OR an event ends within the range (end_date >= start_date AND end_date <= end_date)
+                # - OR an event spans the entire range (date <= start_date AND end_date >= end_date)
+                query = query.filter(
+                    or_(
+                        and_(EventDate.date >= start_date, EventDate.date <= end_date),
+                        and_(EventDate.end_date >= start_date, EventDate.end_date <= end_date),
+                        and_(EventDate.date <= start_date, EventDate.end_date >= end_date)
+                    )
+                )
+            except (ValueError, TypeError):
+                # If date parsing fails, ignore the date filter
+                pass
+
+        # Apply sorting (except for date which is handled client-side)
+        if sort_by != 'date':
+            if sort_dir == 'desc':
+                query = query.order_by(desc(getattr(Event, sort_by)))
+            else:
+                query = query.order_by(getattr(Event, sort_by))
+
+        # Get unique events (due to the join with dates)
+        event_ids = [event.id for event in query.distinct(Event.id)]
+
+        # Fetch complete events with their dates
         events = []
-        for event in query.all():
-            event_dict = {
-                'id': event.id,
-                'title': event.title,
-                'description': event.description,
-                'location': event.location,
-                'url': event.url,
-                'media_url': event.media_url,
-                'archived': event.archived,
-                'dates': []
-            }
-
-            # Add dates
-            for date in event.dates:
-                date_dict = {
-                    'id': date.id,
-                    'date': date.date.isoformat() if date.date else None,
-                    'time': date.time,
-                    'end_date': date.end_date.isoformat() if date.end_date else None,
-                    'end_time': date.end_time
+        for event_id in event_ids:
+            event = session.query(Event).filter(Event.id == event_id).first()
+            if event:
+                event_dict = {
+                    'id': event.id,
+                    'title': event.title,
+                    'description': event.description,
+                    'location': event.location,
+                    'url': event.url,
+                    'media_url': event.media_url,
+                    'archived': event.archived,
+                    'dates': []
                 }
-                event_dict['dates'].append(date_dict)
 
-            events.append(event_dict)
+                # Add dates
+                for date in event.dates:
+                    date_dict = {
+                        'id': date.id,
+                        'date': date.date.isoformat() if date.date else None,
+                        'time': date.time,
+                        'end_date': date.end_date.isoformat() if date.end_date else None,
+                        'end_time': date.end_time
+                    }
+                    event_dict['dates'].append(date_dict)
+
+                events.append(event_dict)
 
         return jsonify(events)
 
@@ -124,6 +154,27 @@ def delete_event(event_id):
         session.close()
 
 
+@app.route('/api/events/<int:event_id>/archive', methods=['PUT'])
+def archive_event(event_id):
+    """Archive a single event by ID."""
+    session = Session()
+    try:
+        event = session.query(Event).filter_by(id=event_id).first()
+        if not event:
+            return jsonify({'error': 'Event not found'}), 404
+
+        event.archived = True
+        session.commit()
+        return jsonify({'success': True})
+
+    except Exception as e:
+        session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+    finally:
+        session.close()
+
+
 @app.route('/api/events/bulk-delete', methods=['POST'])
 def bulk_delete_events():
     """Delete multiple events by ID."""
@@ -138,6 +189,35 @@ def bulk_delete_events():
         session.commit()
 
         return jsonify({'success': True, 'deleted_count': deleted_count})
+
+    except Exception as e:
+        session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+    finally:
+        session.close()
+
+
+@app.route('/api/events/bulk-archive', methods=['POST'])
+def bulk_archive_events():
+    """Archive multiple events by ID."""
+    session = Session()
+    try:
+        event_ids = request.json.get('event_ids', [])
+        if not event_ids:
+            return jsonify({'error': 'No event IDs provided'}), 400
+
+        # Archive events
+        events = session.query(Event).filter(Event.id.in_(event_ids)).all()
+        archived_count = 0
+
+        for event in events:
+            event.archived = True
+            archived_count += 1
+
+        session.commit()
+
+        return jsonify({'success': True, 'archived_count': archived_count})
 
     except Exception as e:
         session.rollback()
