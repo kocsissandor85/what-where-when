@@ -22,7 +22,7 @@
     </div>
 
     <!-- Parser health -->
-    <div class="row mb-4">
+    <div class="row mb-4" data-admin-only>
         <div class="col">
             <div class="card shadow-sm collapsible-card" id="parserHealthCard">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -106,7 +106,7 @@
                         <div class="col-md-3">
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-tag"></i></span>
-                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#tagMappingModal">
+                                <button data-admin-only type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#tagMappingModal">
                                     Mappings
                                 </button>
                                 <select id="tagDropdown" class="form-control form-select">
@@ -127,6 +127,8 @@
                     <div class="filter-tags mt-3" id="filterTags">
                         <!-- Filter tags will be inserted here dynamically -->
                     </div>
+
+                    <hr/>
 
                     <!-- Action Buttons -->
                     <div class="mt-4 d-flex gap-2 flex-wrap">
