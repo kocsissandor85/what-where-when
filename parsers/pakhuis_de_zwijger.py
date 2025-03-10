@@ -11,7 +11,12 @@ locale.setlocale(locale.LC_TIME, "nl_NL.UTF-8")
 
 class PakhuisDeZwijgerParser(BaseParser):
     BASE_URL = "https://dezwijger.nl/ajax/agenda/getItems"
+
+    # Add human-readable display name
     display_name = "Pakhuis de Zwijger"
+
+    # Set automatic tags for all events from this venue
+    automatic_tags = ["Amsterdam"]
 
     def __init__(self):
         self.db_manager = DBManager(DATABASE_URL)

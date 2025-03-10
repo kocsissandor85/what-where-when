@@ -151,12 +151,40 @@ def _parse_dates(datetime_section):
     return dates
 
 
+def extract_tags(item):
+    """Extract tag information from the event item."""
+    tags = []
+    try:
+        # Find the genre container
+        genres_container = item.find('ul', class_='genres')
+
+        if genres_container:
+            # Find all genre items
+            genre_items = genres_container.find_all('li', class_='genres__item')
+
+            # Extract tag names from each genre link
+            for genre_item in genre_items:
+                genre_link = genre_item.find('a', class_='genres__link')
+                if genre_link:
+                    tag_name = genre_link.get_text(strip=True)
+                    if tag_name:
+                        tags.append(tag_name)
+
+        return tags
+    except Exception as e:
+        print(f"Error extracting tags: {e}")
+        return []
+
+
 class FrascatiParser(BaseParser):
     BASE_URL = "https://www.frascatitheater.nl/nl/agenda"
     PAGINATION_PARAM = "?page="
 
     # Add human-readable display name
     display_name = "Frascati Theater"
+
+    # Set automatic tags for all events from this venue
+    automatic_tags = ["Amsterdam"]
 
     def __init__(self):
         self.db_manager = DBManager(DATABASE_URL)
@@ -234,6 +262,9 @@ class FrascatiParser(BaseParser):
         # Parse media (image) URL
         media_url = _parse_media_url(item)
 
+        # Extract genre tags
+        event_tags = extract_tags(item)
+
         # Create the event object
         event = Event(
             title=title,
@@ -245,6 +276,10 @@ class FrascatiParser(BaseParser):
 
         # Link dates to the event
         event.dates = event_dates
+
+        # Store tag names for later processing by BaseParser
+        if event_tags:
+            event._tag_names = event_tags
 
         return event
 

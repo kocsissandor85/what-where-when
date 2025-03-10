@@ -17,13 +17,26 @@ class DBManager:
         # Base.metadata.drop_all(self.engine)  # Drop existing tables
         Base.metadata.create_all(self.engine)  # Create fresh schema
 
-    def check_event_exists(self, title):
+    def check_event_exists(self, title, event_date=None):
         """Check if an event with the same title and date exists in the database."""
         try:
-            event = self.session.query(Event).filter_by(title=title).first()
-            if event:
-                return True
-            return False
+            if event_date:
+                # Check for events with the same title and date
+                from sqlalchemy.orm import joinedload
+                event = self.session.query(Event).filter_by(title=title).options(joinedload(Event.dates)).first()
+
+                if event:
+                    # Check if any of the dates match
+                    for date in event.dates:
+                        if date.date.date() == event_date.date():
+                            return True
+                return False
+            else:
+                # Fall back to title-only check if no date provided
+                event = self.session.query(Event).filter_by(title=title).first()
+                if event:
+                    return True
+                return False
         except Exception as e:
             print(f"Failed to check event existence: {e}")
             return False

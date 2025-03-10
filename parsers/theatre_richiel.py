@@ -17,7 +17,7 @@ class RichelParser(BaseParser):
     display_name = "Theater de Richel"
 
     # Set automatic tags for all events from this venue
-    automatic_tags = []
+    automatic_tags = ["Amsterdam"]
 
     def __init__(self):
         # Set up Selenium WebDriver
