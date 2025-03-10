@@ -87,6 +87,11 @@ export class UIManager {
     const container = this.elements.filterTagsContainer;
     container.innerHTML = '';
 
+    // Tag filter tags
+    if (filters.tag) {
+      this.addFilterTag('tag', 'Tag', filters.tag);
+    }
+
     // Text filter tag
     if (filters.text) {
       this.addFilterTag('text', 'Search', filters.text);
@@ -167,10 +172,11 @@ export class UIManager {
 
   /**
    * Render the events list
-   * @param {Array} events - Array of event objects
-   * @param {boolean} includeArchived - Whether archived events are included
+   * @param events
+   * @param includeArchived
+   * @param tagManager
    */
-  renderEvents(events, includeArchived) {
+  renderEvents(events, includeArchived, tagManager) {
     this.elements.eventsTableBody.innerHTML = '';
 
     if (events.length === 0) {
@@ -200,31 +206,35 @@ export class UIManager {
 
       const status = event.archived ? 'Archived' : 'Active';
 
+      // Prepare the tags HTML using the TagManager
+      const tagsHtml = tagManager ? tagManager.renderEventTags(event.tags) : '';
+
       row.innerHTML = `
-        <td>
-          <input type="checkbox" name="eventCheckbox" class="form-check-input" 
-                 value="${event.id}" onchange="updateActionButtons()">
-        </td>
-        <td class="fw-semibold">${this.escapeHTML(event.title)}</td>
-        <td>${this.escapeHTML(this.truncateText(event.description, 100))}</td>
-        <td>${this.escapeHTML(event.location)}</td>
-        <td>${dateStrings.join('<br>')}</td>
-        <td><span class="badge ${event.archived ? 'bg-secondary' : 'bg-success'}">${status}</span></td>
-        <td>
-          <div class="btn-group">
-            <a href="${event.url}" class="btn btn-sm btn-outline-primary" target="_blank">
-              <i class="bi bi-box-arrow-up-right"></i>
-            </a>
-            ${!event.archived ?
+      <td>
+        <input type="checkbox" name="eventCheckbox" class="form-check-input" 
+               value="${event.id}" onchange="updateActionButtons()">
+      </td>
+      <td class="fw-semibold">${this.escapeHTML(event.title)}</td>
+      <td>${this.escapeHTML(this.truncateText(event.description, 100))}</td>
+      <td>${this.escapeHTML(event.location)}</td>
+      <td>${dateStrings.join('<br>')}</td>
+      <td class="tags-cell">${tagsHtml}</td>
+      <td><span class="badge ${event.archived ? 'bg-secondary' : 'bg-success'}">${status}</span></td>
+      <td>
+        <div class="btn-group">
+          <a href="${event.url}" class="btn btn-sm btn-outline-primary" target="_blank">
+            <i class="bi bi-box-arrow-up-right"></i>
+          </a>
+          ${!event.archived ?
         `<button class="btn btn-sm btn-outline-secondary archive-btn" data-event-id="${event.id}">
-                <i class="bi bi-archive"></i>
-              </button>` : ''}
-            <button class="btn btn-sm btn-outline-danger delete-btn" data-event-id="${event.id}">
-              <i class="bi bi-trash"></i>
-            </button>
-          </div>
-        </td>
-      `;
+              <i class="bi bi-archive"></i>
+            </button>` : ''}
+          <button class="btn btn-sm btn-outline-danger delete-btn" data-event-id="${event.id}">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+      </td>
+    `;
 
       this.elements.eventsTableBody.appendChild(row);
     });

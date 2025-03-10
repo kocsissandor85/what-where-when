@@ -10,6 +10,7 @@ export class StateManager {
     this.includeArchived = false;
     this.dateRangeStart = null;
     this.dateRangeEnd = null;
+    this.tagFilter = null;
   }
 
   /**
@@ -140,6 +141,9 @@ export class StateManager {
       case 'archived':
         this.includeArchived = false;
         break;
+      case 'tag':
+        this.clearTagFilter();
+        break;
     }
   }
 
@@ -152,7 +156,8 @@ export class StateManager {
       text: this.filter,
       dateStart: this.dateRangeStart,
       dateEnd: this.dateRangeEnd,
-      includeArchived: this.includeArchived
+      includeArchived: this.includeArchived,
+      tag: this.tagFilter
     };
   }
 
@@ -174,6 +179,34 @@ export class StateManager {
       params.date_end = this.dateRangeEnd.toISOString().split('T')[0];
     }
 
+    // Add tag filter if set
+    if (this.tagFilter) {
+      params.tag = this.tagFilter;
+    }
+
     return params;
+  }
+
+  /**
+   * Set the current tag filter
+   * @param {string} tag - Tag name to filter by
+   */
+  setTagFilter(tag) {
+    this.tagFilter = tag;
+  }
+
+  /**
+   * Get the current tag filter
+   * @returns {string|null} - Current tag filter
+   */
+  getTagFilter() {
+    return this.tagFilter;
+  }
+
+  /**
+   * Clear the tag filter
+   */
+  clearTagFilter() {
+    this.tagFilter = null;
   }
 }

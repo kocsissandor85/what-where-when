@@ -85,7 +85,7 @@
                 </div>
                 <div class="card-body" id="filtersCardBody">
                     <div class="row g-3">
-                        <div class="col-md-5">
+                        <div class="col-md-4">
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-search"></i></span>
                                 <input type="text" id="filterInput" class="form-control" placeholder="Search events...">
@@ -94,7 +94,7 @@
                                 </button>
                             </div>
                         </div>
-                        <div class="col-md-5">
+                        <div class="col-md-3">
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-calendar-range"></i></span>
                                 <input type="text" id="dateRangeFilter" class="form-control" placeholder="Select date range...">
@@ -104,6 +104,15 @@
                             </div>
                         </div>
                         <div class="col-md-2">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-tag"></i></span>
+                                <select id="tagDropdown" class="form-select">
+                                    <option value="">Select a tag</option>
+                                    <!-- Tag options will be added dynamically -->
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
                             <div class="form-check form-switch h-100 d-flex align-items-center">
                                 <input class="form-check-input" type="checkbox" id="showArchived">
                                 <label class="form-check-label" for="showArchived">Show Archived</label>
@@ -160,6 +169,7 @@
                                 <th>Description</th>
                                 <th data-sort="location">Location <i class="bi bi-arrow-down-up sort-icon"></i></th>
                                 <th data-sort="date">Date <i class="bi bi-arrow-down-up sort-icon"></i></th>
+                                <th>Tags</th>
                                 <th data-sort="archived">Status <i class="bi bi-arrow-down-up sort-icon"></i></th>
                                 <th>Actions</th>
                             </tr>

@@ -2,6 +2,7 @@ import { EventAPI } from './api.js';
 import { UIManager } from './ui-manager.js';
 import { StateManager } from './state-manager.js';
 import { DateUtils } from './date-utils.js';
+import { TagManager } from './tag-manager.js';
 
 /**
  * Main application controller class
@@ -13,6 +14,7 @@ export class EventManagerApp {
     this.state = new StateManager();
     this.ui = new UIManager(this.handleUIEvents.bind(this));
     this.dateUtils = new DateUtils();
+    this.tagManager = new TagManager(this.handleTagFilter.bind(this));
   }
 
   /**
@@ -161,6 +163,8 @@ export class EventManagerApp {
       this.ui.clearDatePicker();
     } else if (filterType === 'archived') {
       this.ui.elements.showArchived.checked = false;
+    } else if (filterType === 'tag') {
+      // No UI element to reset for tag filter as it's a dropdown
     }
 
     // Refresh data and UI
@@ -204,7 +208,8 @@ export class EventManagerApp {
         : events;
 
       this.state.setEvents(sortedEvents);
-      this.ui.renderEvents(sortedEvents, this.state.getIncludeArchived());
+      // Pass the tagManager to renderEvents
+      this.ui.renderEvents(sortedEvents, this.state.getIncludeArchived(), this.tagManager);
       this.updateActionButtons();
       this.updateFilterTags();
     } catch (error) {
@@ -392,5 +397,15 @@ export class EventManagerApp {
       console.error('Error exporting to calendar:', error);
       this.ui.displayCalendarError(error.message);
     }
+  }
+
+  /**
+   * Handle tag filter changes
+   * @param {string} tagName - Selected tag name
+   */
+  handleTagFilter(tagName) {
+    this.state.setTagFilter(tagName);
+    this.fetchEvents();
+    this.updateFilterTags();
   }
 }

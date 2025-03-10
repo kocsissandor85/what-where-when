@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from calendar_service import create_calendar_event, setup_credentials
 
 from database.models import Event, EventDate, ParserHealth
+from database.models import Tag, event_tags
 from database.db_manager import DBManager
 from utils.config import DATABASE_URL
 
@@ -47,11 +48,18 @@ def get_events():
         include_archived = request.args.get('include_archived', 'false').lower() == 'true'
         date_start = request.args.get('date_start')
         date_end = request.args.get('date_end')
+        tag_filter = request.args.get('tag')  # Get tag filter parameter
 
         # Base query with joins
         query = session.query(Event).outerjoin(Event.dates)
 
-        # Apply filters
+        # Apply tag filter if provided
+        if tag_filter:
+            query = query.join(event_tags, Event.id == event_tags.c.event_id) \
+                .join(Tag, Tag.id == event_tags.c.tag_id) \
+                .filter(Tag.name == tag_filter)
+
+        # Apply other filters
         if filter_text:
             query = query.filter(
                 or_(
@@ -70,10 +78,6 @@ def get_events():
                 start_date = datetime.strptime(date_start, '%Y-%m-%d')
                 end_date = datetime.strptime(date_end, '%Y-%m-%d')
 
-                # Filter events where:
-                # - An event starts within the range (date >= start_date AND date <= end_date)
-                # - OR an event ends within the range (end_date >= start_date AND end_date <= end_date)
-                # - OR an event spans the entire range (date <= start_date AND end_date >= end_date)
                 query = query.filter(
                     or_(
                         and_(EventDate.date >= start_date, EventDate.date <= end_date),
@@ -95,7 +99,7 @@ def get_events():
         # Get unique events (due to the join with dates)
         event_ids = [event.id for event in query.distinct(Event.id)]
 
-        # Fetch complete events with their dates
+        # Fetch complete events with their dates and tags
         events = []
         for event_id in event_ids:
             event = session.query(Event).filter(Event.id == event_id).first()
@@ -108,7 +112,8 @@ def get_events():
                     'url': event.url,
                     'media_url': event.media_url,
                     'archived': event.archived,
-                    'dates': []
+                    'dates': [],
+                    'tags': []  # Add tags to event data
                 }
 
                 # Add dates
@@ -121,6 +126,13 @@ def get_events():
                         'end_time': date.end_time
                     }
                     event_dict['dates'].append(date_dict)
+
+                # Add tags
+                for tag in event.tags:
+                    event_dict['tags'].append({
+                        'id': tag.id,
+                        'name': tag.name
+                    })
 
                 events.append(event_dict)
 
@@ -343,6 +355,20 @@ def get_parser_error_details(parser_name):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+    finally:
+        session.close()
+
+
+@app.route('/api/tags')
+def get_tags():
+    """Get all available tags."""
+    session = Session()
+    try:
+        tags = session.query(Tag).order_by(Tag.name).all()
+        tag_list = [{'id': tag.id, 'name': tag.name} for tag in tags]
+        return jsonify(tag_list)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
     finally:
         session.close()
 
