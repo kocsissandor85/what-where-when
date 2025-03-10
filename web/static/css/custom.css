@@ -32,19 +32,25 @@ body {
   background-color: #f8f9fa;
 }
 
-/* Table styling */
+/* Table styling - Apply to all tables consistently */
 .table {
   margin-bottom: 0;
+}
+
+.table th,
+.table td {
+  padding: 0.75rem;
+  vertical-align: middle;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.02);
 }
 
 thead {
   position: sticky;
   top: 0;
   z-index: 1;
-}
-
-th, td {
-  padding: 1rem 0.75rem;
 }
 
 /* Make the sort icons on table headers more visible */
@@ -162,13 +168,10 @@ td:nth-child(3) {
   padding: 0.75rem 1rem;
 }
 
-#parserHealthCard .table {
-  margin-bottom: 0;
-}
-
-#parserHealthCard th,
-#parserHealthCard td {
-  padding: 0.5rem 0.75rem;
+/* Ensure consistent padding for all table cells */
+.table th,
+.table td {
+  padding: 0.75rem;
 }
 
 /* Remove column width limit for error buttons */
@@ -177,8 +180,8 @@ td:nth-child(3) {
 }
 
 /* Parser status badges */
-#parserHealthTable .badge {
-  font-size: 0.75rem;
+.badge {
+  font-size: 0.825rem;
   font-weight: 500;
   padding: 0.35em 0.65em;
 }

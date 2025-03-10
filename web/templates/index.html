@@ -34,14 +34,14 @@
                         <button class="btn btn-sm btn-outline-secondary" id="refreshHealthButton">
                             <i class="bi bi-arrow-clockwise"></i>
                         </button>
-                        <button class="btn btn-sm btn-outline-secondary toggle-btn" data-target="parserHealthBody">
+                        <button class="btn btn-sm btn-outline-secondary toggle-btn" data-target="parserHealthCardBody">
                             <i class="bi bi-chevron-down"></i>
                         </button>
                     </div>
                 </div>
-                <div class="card-body d-none" id="parserHealthBody">
+                <div class="card-body d-none" id="parserHealthCardBody">
                     <div class="table-responsive">
-                        <table class="table table-sm" id="parserHealthTable">
+                        <table class="table table-hover align-middle" id="parserHealthTable">
                             <thead class="table-light">
                             <tr>
                                 <th>Parser</th>
@@ -51,7 +51,7 @@
                                 <th>Error</th>
                             </tr>
                             </thead>
-                            <tbody id="parserHealthBody">
+                            <tbody id="parserHealthTableBody">
                             <!-- Parser health data will be inserted here -->
                             </tbody>
                         </table>

@@ -12,10 +12,11 @@ export class ParserHealthUIManager {
     // Initialize UI elements
     this.elements = {
       parserHealthTable: document.getElementById('parserHealthTable'),
-      parserHealthBody: document.getElementById('parserHealthBody'),
+      parserHealthTableBody: document.getElementById('parserHealthTableBody'),
       parserHealthCard: document.getElementById('parserHealthCard'),
+      parserHealthCardBody: document.getElementById('parserHealthCardBody'),
       loadingSpinner: document.getElementById('parserHealthLoading'),
-      toggleHealthButton: document.getElementById('toggleHealthButton'),
+      toggleHealthButton: document.querySelector('#parserHealthCard .toggle-btn'),
       refreshHealthButton: document.getElementById('refreshHealthButton'),
       errorModal: document.getElementById('errorDetailsModal'),
       errorModalTitle: document.getElementById('errorModalTitle'),
@@ -29,12 +30,6 @@ export class ParserHealthUIManager {
     }
 
     // Add event listeners
-    if (this.elements.toggleHealthButton) {
-      this.elements.toggleHealthButton.addEventListener('click', () => {
-        this.toggleHealthCard();
-      });
-    }
-
     if (this.elements.refreshHealthButton) {
       this.elements.refreshHealthButton.addEventListener('click', () => {
         if (this.refreshCallback) {
@@ -48,15 +43,15 @@ export class ParserHealthUIManager {
    * Toggle the visibility of the parser health card
    */
   toggleHealthCard() {
-    if (this.elements.parserHealthCard) {
-      const cardBody = this.elements.parserHealthCard.querySelector('.card-body');
-
-      if (cardBody.classList.contains('d-none')) {
-        cardBody.classList.remove('d-none');
+    if (this.elements.parserHealthCardBody) {
+      if (this.elements.parserHealthCardBody.classList.contains('d-none')) {
+        this.elements.parserHealthCardBody.classList.remove('d-none');
         this.elements.toggleHealthButton.innerHTML = '<i class="bi bi-chevron-up"></i>';
+        this.elements.parserHealthCard.classList.remove('collapsed');
       } else {
-        cardBody.classList.add('d-none');
+        this.elements.parserHealthCardBody.classList.add('d-none');
         this.elements.toggleHealthButton.innerHTML = '<i class="bi bi-chevron-down"></i>';
+        this.elements.parserHealthCard.classList.add('collapsed');
       }
     }
   }
@@ -108,14 +103,14 @@ export class ParserHealthUIManager {
    * @param {Function} errorDetailsCallback - Callback for viewing error details
    */
   renderParserHealth(healthData, errorDetailsCallback) {
-    if (!this.elements.parserHealthBody) return;
+    if (!this.elements.parserHealthTableBody) return;
 
-    this.elements.parserHealthBody.innerHTML = '';
+    this.elements.parserHealthTableBody.innerHTML = '';
 
     if (healthData.length === 0) {
       const row = document.createElement('tr');
       row.innerHTML = '<td colspan="5" class="text-center">No parser health data available.</td>';
-      this.elements.parserHealthBody.appendChild(row);
+      this.elements.parserHealthTableBody.appendChild(row);
       return;
     }
 
@@ -152,7 +147,7 @@ export class ParserHealthUIManager {
         <td>${errorCell}</td>
       `;
 
-      this.elements.parserHealthBody.appendChild(row);
+      this.elements.parserHealthTableBody.appendChild(row);
     });
 
     // Add event listeners to error buttons
