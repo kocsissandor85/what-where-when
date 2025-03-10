@@ -36,33 +36,75 @@ def _parse_date(date_str):
         raise ValueError("Empty date string")
 
     # Translate Dutch abbreviations to English
-    date_str = date_str.replace('’', "'")  # Normalize apostrophes
+    date_str = date_str.replace('’', "").replace('\u2019', "")  # Normalize apostrophes
 
+    # Translate Dutch abbreviations to English
     translations = {
         "ma": "Mon", "di": "Tue", "wo": "Wed", "do": "Thu", "vr": "Fri", "za": "Sat", "zo": "Sun",
         "jan": "Jan", "feb": "Feb", "mrt": "Mar", "apr": "Apr", "mei": "May", "jun": "Jun",
         "jul": "Jul", "aug": "Aug", "sep": "Sep", "okt": "Oct", "nov": "Nov", "dec": "Dec"
     }
 
-    translated = date_str
-    for dutch, english in translations.items():
-        translated = translated.replace(dutch, english)
+    # Split the input string into parts
+    parts = date_str.split()
+    translated_parts = []
 
-    # Fix the format string to match the actual date format
-    try:
-        # Try with two digit year: e.g., "Mon 11 Mar '25"
-        return datetime.strptime(translated, "%a %d %b '%y")
-    except ValueError:
+    for part in parts:
+        # Check if this part is a Dutch day or month abbreviation
+        part_lower = part.lower()
+        found = False
+        for dutch, english in translations.items():
+            if part_lower == dutch:
+                translated_parts.append(english)
+                found = True
+                break
+        if not found:
+            translated_parts.append(part)
+
+    # Rejoin the parts
+    translated = " ".join(translated_parts)
+
+    # Try to parse with just a few simple formats after cleaning
+    formats_to_try = [
+        "%a %d %b %y",  # "Mon 11 Mar 25" (two-digit year, no apostrophe)
+        "%a %d %b %Y",  # "Mon 11 Mar 2025" (four-digit year)
+        "%d %b %y",     # "11 Mar 25" (no weekday)
+        "%d %b %Y",     # "11 Mar 2025" (no weekday, four-digit year)
+        "%a %d %b",     # "Mon 11 Mar" (no year - will default to 1900)
+        "%d %b"         # "11 Mar" (no weekday, no year)
+    ]
+
+    # Try each format until one works
+    for fmt in formats_to_try:
         try:
-            # Try without apostrophe: e.g., "Mon 11 Mar 25"
-            return datetime.strptime(translated, "%a %d %b %y")
+            return datetime.strptime(translated, fmt)
         except ValueError:
-            # Try with four digit year: e.g., "Mon 11 Mar 2025"
-            try:
-                return datetime.strptime(translated, "%a %d %b %Y")
-            except ValueError:
-                # If all formats fail, raise an error
-                raise ValueError(f"Could not parse date: '{date_str}' (translated to '{translated}')")
+            continue
+
+    # If all standard formats fail, try a manual approach for specific cases
+    parts = translated.split()
+    if len(parts) >= 3:
+        try:
+            # Check if the last part might be a year
+            if len(parts[-1]) <= 2 and parts[-1].isdigit():
+                # Handle 2-digit year
+                year = 2000 + int(parts[-1])  # Assume 21st century
+                # Try to parse month and day
+                month_names = {
+                    'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6,
+                    'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12
+                }
+
+                for i, part in enumerate(parts[:-1]):
+                    if part in month_names and i > 0 and parts[i-1].isdigit():
+                        day = int(parts[i-1])
+                        month = month_names[part]
+                        return datetime(year, month, day)
+        except (ValueError, IndexError):
+            pass
+
+    # If all else fails, raise an error with detailed information
+    raise ValueError(f"Could not parse date: '{date_str}' (translated to '{translated}')")
 
 
 def _parse_dates(datetime_section):
