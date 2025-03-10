@@ -186,10 +186,14 @@ class FrascatiParser(BaseParser):
                 event = self.parse_event(item)
 
                 if event:
+                    # Get the event date (assuming the first date in the list)
+                    event_date = event.dates[0].date if event.dates else None
+
                     # Check if the event already exists
-                    if self.db_manager.check_event_exists(event.title):
-                        print(f"Event already exists: {event.title}. Stopping parser.")
-                        return events  # Stop parsing further pages
+                    if self.db_manager.check_event_exists(event.title, event_date):
+                        print(f"Event already exists: {event.title} on {event_date}.")
+                        continue
+
                     events.append(event)
 
             page += 1

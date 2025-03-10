@@ -6,6 +6,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from datetime import datetime
 from database.models import Event, EventDate
 from parsers.base_parser import BaseParser
+from database.db_manager import DBManager
+from utils.config import DATABASE_URL
 import locale
 
 class RichelParser(BaseParser):
@@ -18,6 +20,7 @@ class RichelParser(BaseParser):
         # Set up Selenium WebDriver
         self.driver = webdriver.Chrome()  # Use the appropriate driver for your browser
         self.driver.maximize_window()
+        self.db_manager = DBManager(DATABASE_URL)
 
     def fetch_data(self):
         """Fetch all event data by handling scrolling and lazy loading."""
@@ -68,6 +71,13 @@ class RichelParser(BaseParser):
             try:
                 event = self.parse_event(item)
                 if event:
+                    # Get the event date (assuming the first date in the list)
+                    event_date = event.dates[0].date if event.dates else None
+
+                    if self.db_manager.check_event_exists(event.title, event_date):
+                        print(f"Event already exists: {event.title} on {event_date}.")
+                        continue
+
                     events.append(event)
             except Exception as e:
                 print(f"Error parsing event: {e}")

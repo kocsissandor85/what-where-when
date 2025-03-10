@@ -39,10 +39,15 @@ class PakhuisDeZwijgerParser(BaseParser):
 
             for item in event_items:
                 event = self.parse_event(item)
+
                 if event:
-                    if self.db_manager.check_event_exists(event.title):
-                        print(f"Event already exists: {event.title}. Skipping.")
+                    # Get the event date (assuming the first date in the list)
+                    event_date = event.dates[0].date if event.dates else None
+
+                    if self.db_manager.check_event_exists(event.title, event_date):
+                        print(f"Event already exists: {event.title} on {event_date}.")
                         continue
+
                     events.append(event)
 
             if page >= total_pages:
