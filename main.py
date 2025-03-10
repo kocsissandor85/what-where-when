@@ -18,22 +18,17 @@ def main():
     # Archive events older than today
     db_manager.archive_events()
 
-    # Initialize parser manager
-    parser_manager = ParserManager()
+    # Initialize parser manager with database session
+    parser_manager = ParserManager(db_manager.session)
     parser_manager.auto_register_parsers()
 
     if args.parser:
         # Run specific parsers
         all_events = []
         for parser_name in args.parser:
-            specific_parser = parser_manager.get_parser(parser_name)
-            if specific_parser:
-                logger.info(f"Running specific parser: {parser_name}")
-                events = specific_parser.fetch_data()
-                all_events.extend(events)
-            else:
-                logger.warning(f"Parser '{parser_name}' not found.")
-
+            logger.info(f"Running specific parser: {parser_name}")
+            events = parser_manager.run_specific_parser(parser_name)
+            all_events.extend(events)
     else:
         # Run all parsers
         logger.info("Running all parsers...")

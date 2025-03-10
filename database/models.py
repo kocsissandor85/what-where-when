@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -42,3 +42,14 @@ class EventDate(Base):
     end_time = Column(String(20), nullable=True)  # Optional end time for intervals
 
     event = relationship('Event', back_populates='dates')
+
+
+class ParserHealth(Base):
+    __tablename__ = 'parser_health'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    parser_name = Column(String(255), nullable=False)
+    last_run = Column(DateTime, nullable=False)
+    success = Column(Boolean, default=True)
+    events_parsed = Column(Integer, default=0)
+    error_message = Column(Text, nullable=True)

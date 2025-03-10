@@ -282,5 +282,45 @@ def export_to_calendar():
         session.close()
 
 
+@app.route('/api/parser-health')
+def get_parser_health():
+    """Get the health status of all parsers."""
+    session = Session()
+    try:
+        from database.models import ParserHealth
+
+        # Simpler query that just gets the latest record for each parser
+        parser_records = {}
+
+        # Get all records
+        all_records = session.query(ParserHealth).order_by(ParserHealth.last_run.desc()).all()
+
+        # Keep only the latest record for each parser
+        for record in all_records:
+            if record.parser_name not in parser_records:
+                parser_records[record.parser_name] = record
+
+        # Convert to dictionary for JSON response
+        health_data = []
+        for parser_name, record in parser_records.items():
+            health_data.append({
+                'parser_name': record.parser_name,
+                'last_run': record.last_run.isoformat() if record.last_run else None,
+                'success': record.success,
+                'events_parsed': record.events_parsed,
+                'error_message': record.error_message
+            })
+
+        return jsonify({'parser_health': health_data})
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+    finally:
+        session.close()
+
+
 if __name__ == '__main__':
     app.run(debug=True)
