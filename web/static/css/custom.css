@@ -1,0 +1,39 @@
+/* Custom styling for Event Manager */
+
+/* Make the sort icons on table headers more visible */
+.sort-icon {
+  opacity: 0.5;
+  cursor: pointer;
+}
+
+th[data-sort] {
+  cursor: pointer;
+}
+
+th[data-sort]:hover .sort-icon {
+  opacity: 1;
+}
+
+/* Limit description text width */
+td:nth-child(3) {
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Add hover effect to table rows */
+tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Add some spacing to the badge */
+.badge {
+  padding: 0.5em 0.6em;
+}
+
+/* Make checkboxes a bit larger */
+.form-check-input {
+  width: 1.2em;
+  height: 1.2em;
+}
