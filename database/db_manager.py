@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database.models import Base, Event, ParserMetadata
+from database.models import Base, Event, ParserMetadata, Tag, ParserTag
 from datetime import datetime, timedelta
 from sqlalchemy.orm import joinedload
 from utils.logger import logger
@@ -17,26 +17,13 @@ class DBManager:
         # Base.metadata.drop_all(self.engine)  # Drop existing tables
         Base.metadata.create_all(self.engine)  # Create fresh schema
 
-    def check_event_exists(self, title, event_date=None):
+    def check_event_exists(self, title):
         """Check if an event with the same title and date exists in the database."""
         try:
-            if event_date:
-                # Check for events with the same title and date
-                from sqlalchemy.orm import joinedload
-                event = self.session.query(Event).filter_by(title=title).options(joinedload(Event.dates)).first()
-
-                if event:
-                    # Check if any of the dates match
-                    for date in event.dates:
-                        if date.date.date() == event_date.date():
-                            return True
-                return False
-            else:
-                # Fall back to title-only check if no date provided
-                event = self.session.query(Event).filter_by(title=title).first()
-                if event:
-                    return True
-                return False
+            event = self.session.query(Event).filter_by(title=title).first()
+            if event:
+                return True
+            return False
         except Exception as e:
             print(f"Failed to check event existence: {e}")
             return False
@@ -58,12 +45,17 @@ class DBManager:
 
     def add_event(self, event):
         """Add a new event to the database if no matching title."""
-        if self.check_event_exists(event.title, event.dates[0].date if event.dates else None):
+        if self.check_event_exists(event.title):
             print(f"Skipped duplicate event: {event.title}")
             return
         self.session.add(event)
         self.session.commit()
         logger.info(f"Added event: {event.title}")
+
+        # Log tags if any
+        if event.tags:
+            tag_names = [tag.name for tag in event.tags]
+            logger.info(f"Event tags: {', '.join(tag_names)}")
 
     def archive_event(self, event_id):
         """Mark an event as archived."""
@@ -116,6 +108,84 @@ class DBManager:
     def get_active_events(self):
         """Retrieve all events that are not archived."""
         return self.session.query(Event).filter_by(archived=False).all()
+
+    # Tag management methods
+    def create_tag(self, tag_name):
+        """Create a new tag if it doesn't exist."""
+        tag = self.session.query(Tag).filter_by(name=tag_name).first()
+        if not tag:
+            tag = Tag(name=tag_name)
+            self.session.add(tag)
+            self.session.commit()
+            logger.info(f"Created new tag: {tag_name}")
+        return tag
+
+    def get_tag(self, tag_name):
+        """Get a tag by name."""
+        return self.session.query(Tag).filter_by(name=tag_name).first()
+
+    def get_or_create_tag(self, tag_name):
+        """Get a tag by name or create it if it doesn't exist."""
+        tag = self.get_tag(tag_name)
+        if not tag:
+            tag = self.create_tag(tag_name)
+        return tag
+
+    def get_all_tags(self):
+        """Get all tags in the database."""
+        return self.session.query(Tag).all()
+
+    def get_parser_tags(self, parser_name):
+        """Get all tags associated with a parser."""
+        parser_tags = self.session.query(ParserTag).filter_by(parser_name=parser_name).all()
+        tags = []
+        for parser_tag in parser_tags:
+            tag = self.session.query(Tag).filter_by(id=parser_tag.tag_id).first()
+            if tag:
+                tags.append(tag)
+        return tags
+
+    def set_parser_tags(self, parser_name, tag_names):
+        """Set the automatic tags for a parser."""
+        # Remove existing parser tags
+        self.session.query(ParserTag).filter_by(parser_name=parser_name).delete()
+
+        # Add new tags
+        for tag_name in tag_names:
+            tag = self.get_or_create_tag(tag_name)
+            parser_tag = ParserTag(parser_name=parser_name, tag_id=tag.id)
+            self.session.add(parser_tag)
+
+        self.session.commit()
+        logger.info(f"Set tags for parser {parser_name}: {', '.join(tag_names)}")
+
+    def add_tag_to_event(self, event_id, tag_name):
+        """Add a tag to an event."""
+        event = self.session.query(Event).filter_by(id=event_id).first()
+        if not event:
+            logger.error(f"Event with ID {event_id} not found.")
+            return False
+
+        tag = self.get_or_create_tag(tag_name)
+        if tag not in event.tags:
+            event.tags.append(tag)
+            self.session.commit()
+            logger.info(f"Added tag '{tag_name}' to event '{event.title}'")
+        return True
+
+    def remove_tag_from_event(self, event_id, tag_name):
+        """Remove a tag from an event."""
+        event = self.session.query(Event).filter_by(id=event_id).first()
+        if not event:
+            logger.error(f"Event with ID {event_id} not found.")
+            return False
+
+        tag = self.get_tag(tag_name)
+        if tag and tag in event.tags:
+            event.tags.remove(tag)
+            self.session.commit()
+            logger.info(f"Removed tag '{tag_name}' from event '{event.title}'")
+        return True
 
     def close(self):
         """Close the database session."""

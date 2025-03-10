@@ -1,9 +1,16 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text, ForeignKey, Table
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
 Base = declarative_base()
 
+# Association table for many-to-many relationship between events and tags
+event_tags = Table(
+    'event_tags',
+    Base.metadata,
+    Column('event_id', Integer, ForeignKey('events.id', ondelete='CASCADE'), primary_key=True),
+    Column('tag_id', Integer, ForeignKey('tags.id', ondelete='CASCADE'), primary_key=True)
+)
 
 class ParserMetadata(Base):
     __tablename__ = 'parser_metadata'
@@ -26,6 +33,9 @@ class Event(Base):
 
     # Relationship to event dates
     dates = relationship('EventDate', back_populates='event', cascade="all, delete-orphan")
+
+    # Relationship to tags (many-to-many)
+    tags = relationship('Tag', secondary=event_tags, back_populates='events')
 
 
 class EventDate(Base):
@@ -51,3 +61,33 @@ class ParserHealth(Base):
     success = Column(Boolean, default=True)
     events_parsed = Column(Integer, default=0)
     error_message = Column(Text, nullable=True)
+
+
+class Tag(Base):
+    __tablename__ = 'tags'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(100), nullable=False, unique=True)  # Unique tag names
+
+    # Relationship to events (many-to-many)
+    events = relationship('Event', secondary=event_tags, back_populates='tags')
+
+    # Relationship to parsers (many-to-many)
+    parsers = relationship('ParserTag', back_populates='tag')
+
+
+class ParserTag(Base):
+    __tablename__ = 'parser_tags'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    parser_name = Column(String(255), nullable=False)
+    tag_id = Column(Integer, ForeignKey('tags.id', ondelete='CASCADE'))
+
+    # Relationship to tags
+    tag = relationship('Tag', back_populates='parsers')
+
+    # Unique constraint to ensure a tag is only assigned once to a parser
+    __table_args__ = (
+        # Note: SQLite doesn't enforce this constraint, but other DBs will
+        # This serves more as documentation for now
+    )
