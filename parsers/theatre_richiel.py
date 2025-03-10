@@ -11,6 +11,9 @@ import locale
 class RichelParser(BaseParser):
     BASE_URL = "https://theaterderichel.nl/agenda/"
 
+    # Add human-readable display name
+    display_name = "Theater de Richel"
+
     def __init__(self):
         # Set up Selenium WebDriver
         self.driver = webdriver.Chrome()  # Use the appropriate driver for your browser

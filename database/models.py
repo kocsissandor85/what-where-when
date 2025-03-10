@@ -13,9 +13,6 @@ class ParserMetadata(Base):
     last_parsed_date = Column(DateTime, nullable=True)
 
 
-Base = declarative_base()
-
-
 class Event(Base):
     __tablename__ = 'events'
 
@@ -49,6 +46,7 @@ class ParserHealth(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     parser_name = Column(String(255), nullable=False)
+    display_name = Column(String(255), nullable=True)  # Added display_name column
     last_run = Column(DateTime, nullable=False)
     success = Column(Boolean, default=True)
     events_parsed = Column(Integer, default=0)

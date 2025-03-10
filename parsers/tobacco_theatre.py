@@ -10,6 +10,9 @@ import json
 class TobaccoTheatreParser(BaseParser):
     BASE_URL = "https://tobaccotheater.nl/tobacco-tickets-agenda/"
 
+    # Add human-readable display name
+    display_name = "Tobacco Theatre"
+
     def __init__(self):
         self.db_manager = DBManager(DATABASE_URL)
 

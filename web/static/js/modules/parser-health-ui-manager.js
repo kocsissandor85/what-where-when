@@ -7,6 +7,7 @@ export class ParserHealthUIManager {
    */
   constructor(refreshCallback = null) {
     this.refreshCallback = refreshCallback;
+    this.errorModal = null;
 
     // Initialize UI elements
     this.elements = {
@@ -15,8 +16,17 @@ export class ParserHealthUIManager {
       parserHealthCard: document.getElementById('parserHealthCard'),
       loadingSpinner: document.getElementById('parserHealthLoading'),
       toggleHealthButton: document.getElementById('toggleHealthButton'),
-      refreshHealthButton: document.getElementById('refreshHealthButton')
+      refreshHealthButton: document.getElementById('refreshHealthButton'),
+      errorModal: document.getElementById('errorDetailsModal'),
+      errorModalTitle: document.getElementById('errorModalTitle'),
+      errorModalContent: document.getElementById('errorModalContent'),
+      errorModalDate: document.getElementById('errorModalDate')
     };
+
+    // Initialize Bootstrap modal
+    if (this.elements.errorModal) {
+      this.errorModal = new bootstrap.Modal(this.elements.errorModal);
+    }
 
     // Add event listeners
     if (this.elements.toggleHealthButton) {
@@ -70,10 +80,34 @@ export class ParserHealthUIManager {
   }
 
   /**
+   * Show the error details modal
+   * @param {Object} data - Error details data
+   */
+  showErrorDetails(data) {
+    if (!this.errorModal) return;
+
+    // Set modal content
+    this.elements.errorModalTitle.textContent = `Error Details - ${data.display_name}`;
+    this.elements.errorModalContent.textContent = data.error_message;
+
+    // Format date
+    if (data.last_run) {
+      const date = new Date(data.last_run);
+      this.elements.errorModalDate.textContent = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+    } else {
+      this.elements.errorModalDate.textContent = 'Unknown';
+    }
+
+    // Show modal
+    this.errorModal.show();
+  }
+
+  /**
    * Render parser health data
    * @param {Array} healthData - Array of parser health records
+   * @param {Function} errorDetailsCallback - Callback for viewing error details
    */
-  renderParserHealth(healthData) {
+  renderParserHealth(healthData, errorDetailsCallback) {
     if (!this.elements.parserHealthBody) return;
 
     this.elements.parserHealthBody.innerHTML = '';
@@ -99,15 +133,36 @@ export class ParserHealthUIManager {
         '<span class="badge bg-success">Success</span>' :
         '<span class="badge bg-danger">Failed</span>';
 
+      // Create error cell content - now a button for failed parsers
+      let errorCell;
+      if (!record.success && record.error_message) {
+        errorCell = `<button class="btn btn-sm btn-outline-danger view-error-btn" 
+                            data-parser="${this.escapeHTML(record.parser_name)}">
+                      <i class="bi bi-exclamation-circle me-1"></i>View Error
+                    </button>`;
+      } else {
+        errorCell = '-';
+      }
+
       row.innerHTML = `
-        <td>${this.escapeHTML(record.parser_name)}</td>
+        <td>${this.escapeHTML(record.display_name)}</td>
         <td>${formattedDate}</td>
         <td class="text-center">${statusBadge}</td>
         <td class="text-center">${record.events_parsed}</td>
-        <td>${this.escapeHTML(record.error_message || '-')}</td>
+        <td>${errorCell}</td>
       `;
 
       this.elements.parserHealthBody.appendChild(row);
+    });
+
+    // Add event listeners to error buttons
+    document.querySelectorAll('.view-error-btn').forEach(button => {
+      button.addEventListener('click', () => {
+        const parserName = button.getAttribute('data-parser');
+        if (errorDetailsCallback) {
+          errorDetailsCallback(parserName);
+        }
+      });
     });
   }
 

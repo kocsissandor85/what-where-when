@@ -24,7 +24,7 @@
     <!-- Parser health -->
     <div class="row mb-4">
         <div class="col">
-            <div class="card shadow-sm" id="parserHealthCard">
+            <div class="card shadow-sm collapsible-card" id="parserHealthCard">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">
                         <i class="bi bi-activity text-primary me-2"></i>
@@ -34,12 +34,12 @@
                         <button class="btn btn-sm btn-outline-secondary" id="refreshHealthButton">
                             <i class="bi bi-arrow-clockwise"></i>
                         </button>
-                        <button class="btn btn-sm btn-outline-secondary" id="toggleHealthButton">
+                        <button class="btn btn-sm btn-outline-secondary toggle-btn" data-target="parserHealthBody">
                             <i class="bi bi-chevron-down"></i>
                         </button>
                     </div>
                 </div>
-                <div class="card-body d-none">
+                <div class="card-body d-none" id="parserHealthBody">
                     <div class="table-responsive">
                         <table class="table table-sm" id="parserHealthTable">
                             <thead class="table-light">
@@ -68,12 +68,22 @@
         </div>
     </div>
 
-    <!-- Filters and actions row -->
-    <div class="row mb-4 g-3">
-        <div class="col-md-8">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">Filters</h5>
+    <!-- Filters section -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card shadow-sm collapsible-card" id="filtersCard">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-funnel text-primary me-2"></i>
+                        Filters & Actions
+                    </h5>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-secondary toggle-btn" data-target="filtersCardBody">
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body" id="filtersCardBody">
                     <div class="row g-3">
                         <div class="col-md-5">
                             <div class="input-group">
@@ -105,14 +115,9 @@
                     <div class="filter-tags mt-3" id="filterTags">
                         <!-- Filter tags will be inserted here dynamically -->
                     </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">Actions</h5>
-                    <div class="d-flex gap-2 flex-wrap">
+
+                    <!-- Action Buttons -->
+                    <div class="mt-4 d-flex gap-2 flex-wrap">
                         <button class="btn btn-outline-danger" id="bulkDeleteButton" disabled>
                             <i class="bi bi-trash"></i> Delete
                         </button>
@@ -129,39 +134,54 @@
     </div>
 
     <!-- Events table -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-body table-container">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
-                    <tr>
-                        <th>
-                            <input type="checkbox" id="selectAll" class="form-check-input">
-                        </th>
-                        <th data-sort="title">Title <i class="bi bi-arrow-down-up sort-icon"></i></th>
-                        <th>Description</th>
-                        <th data-sort="location">Location <i class="bi bi-arrow-down-up sort-icon"></i></th>
-                        <th data-sort="date">Date <i class="bi bi-arrow-down-up sort-icon"></i></th>
-                        <th data-sort="archived">Status <i class="bi bi-arrow-down-up sort-icon"></i></th>
-                        <th>Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody id="eventsTableBody">
-                    <!-- Event rows will be inserted here dynamically -->
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Loading spinner -->
-            <div id="loadingSpinner" class="text-center py-4 d-none">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card shadow-sm collapsible-card" id="eventsCard">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-calendar-event text-primary me-2"></i>
+                        Events
+                    </h5>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-secondary toggle-btn" data-target="eventsCardBody">
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                    </div>
                 </div>
-            </div>
+                <div class="card-body table-container" id="eventsCardBody">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                            <tr>
+                                <th>
+                                    <input type="checkbox" id="selectAll" class="form-check-input">
+                                </th>
+                                <th data-sort="title">Title <i class="bi bi-arrow-down-up sort-icon"></i></th>
+                                <th>Description</th>
+                                <th data-sort="location">Location <i class="bi bi-arrow-down-up sort-icon"></i></th>
+                                <th data-sort="date">Date <i class="bi bi-arrow-down-up sort-icon"></i></th>
+                                <th data-sort="archived">Status <i class="bi bi-arrow-down-up sort-icon"></i></th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody id="eventsTableBody">
+                            <!-- Event rows will be inserted here dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
 
-            <!-- No events message -->
-            <div id="noEventsMessage" class="alert alert-info text-center d-none m-3">
-                No events found.
+                    <!-- Loading spinner -->
+                    <div id="loadingSpinner" class="text-center py-4 d-none">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+
+                    <!-- No events message -->
+                    <div id="noEventsMessage" class="alert alert-info text-center d-none m-3">
+                        No events found.
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -172,7 +192,10 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="calendarModalLabel">Export to Google Calendar</h5>
+                <h5 class="modal-title" id="calendarModalLabel">
+                    <i class="bi bi-calendar-plus text-primary me-2"></i>
+                    Export to Google Calendar
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -201,7 +224,10 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="bulkArchiveModalLabel">Archive Events</h5>
+                <h5 class="modal-title" id="bulkArchiveModalLabel">
+                    <i class="bi bi-archive text-primary me-2"></i>
+                    Archive Events
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -221,11 +247,67 @@
     </div>
 </div>
 
+<!-- Error Details Modal -->
+<div class="modal fade" id="errorDetailsModal" tabindex="-1" aria-labelledby="errorDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="errorModalTitle">
+                    <i class="bi bi-exclamation-triangle text-danger me-2"></i>
+                    Error Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <strong>Error occurred at:</strong> <span id="errorModalDate"></span>
+                </div>
+                <div class="error-details p-3 bg-light">
+                    <pre id="errorModalContent" class="mb-0" style="white-space: pre-wrap; word-break: break-word;"></pre>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Bootstrap Bundle with Popper -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <!-- Flatpickr Date Picker -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <!-- Main JS -->
 <script type="module" src="../static/js/index.js"></script>
+
+<!-- Toggle functionality -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all toggle buttons
+    document.querySelectorAll('.toggle-btn').forEach(button => {
+      button.addEventListener('click', function() {
+        const targetId = this.getAttribute('data-target');
+        const targetElement = document.getElementById(targetId);
+        const card = this.closest('.collapsible-card');
+
+        if (targetElement.classList.contains('d-none')) {
+          // Show content
+          targetElement.classList.remove('d-none');
+          this.innerHTML = '<i class="bi bi-chevron-up"></i>';
+          card.classList.remove('collapsed');
+        } else {
+          // Hide content
+          targetElement.classList.add('d-none');
+          this.innerHTML = '<i class="bi bi-chevron-down"></i>';
+          card.classList.add('collapsed');
+        }
+      });
+    });
+
+    // Only parser health is initially collapsed
+    const parserHealthCard = document.getElementById('parserHealthCard');
+    parserHealthCard.classList.add('collapsed');
+  });
+</script>
 </body>
 </html>

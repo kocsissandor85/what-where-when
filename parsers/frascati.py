@@ -12,6 +12,9 @@ class FrascatiParser(BaseParser):
     BASE_URL = "https://www.frascatitheater.nl/nl/agenda"
     PAGINATION_PARAM = "?page="
 
+    # Add human-readable display name
+    display_name = "Frascati Theater"
+
     def __init__(self):
         self.db_manager = DBManager(DATABASE_URL)
 

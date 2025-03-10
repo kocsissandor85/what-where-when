@@ -12,7 +12,7 @@ from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
 from calendar_service import create_calendar_event, setup_credentials
 
-from database.models import Event, EventDate
+from database.models import Event, EventDate, ParserHealth
 from database.db_manager import DBManager
 from utils.config import DATABASE_URL
 
@@ -287,8 +287,6 @@ def get_parser_health():
     """Get the health status of all parsers."""
     session = Session()
     try:
-        from database.models import ParserHealth
-
         # Simpler query that just gets the latest record for each parser
         parser_records = {}
 
@@ -305,6 +303,7 @@ def get_parser_health():
         for parser_name, record in parser_records.items():
             health_data.append({
                 'parser_name': record.parser_name,
+                'display_name': record.display_name or record.parser_name,  # Use display_name if available
                 'last_run': record.last_run.isoformat() if record.last_run else None,
                 'success': record.success,
                 'events_parsed': record.events_parsed,
@@ -316,6 +315,32 @@ def get_parser_health():
     except Exception as e:
         import traceback
         traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+    finally:
+        session.close()
+
+
+@app.route('/api/parser-health/error-details/<string:parser_name>')
+def get_parser_error_details(parser_name):
+    """Get the detailed error message for a parser."""
+    session = Session()
+    try:
+        # Get the latest record for the specified parser
+        record = session.query(ParserHealth).filter_by(parser_name=parser_name) \
+            .order_by(ParserHealth.last_run.desc()).first()
+
+        if not record:
+            return jsonify({'error': 'Parser record not found'}), 404
+
+        return jsonify({
+            'parser_name': record.parser_name,
+            'display_name': record.display_name or record.parser_name,
+            'last_run': record.last_run.isoformat() if record.last_run else None,
+            'error_message': record.error_message or 'No error information available'
+        })
+
+    except Exception as e:
         return jsonify({'error': str(e)}), 500
 
     finally:

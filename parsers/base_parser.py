@@ -6,6 +6,9 @@ from utils.logger import logger
 
 
 class BaseParser(ABC):
+    # Add display_name class variable with default value
+    display_name = "Generic Parser"
+
     @abstractmethod
     def fetch_data(self):
         """Fetch all data from the target source."""
@@ -45,6 +48,7 @@ class BaseParser(ABC):
         # Log parser health
         health_record = ParserHealth(
             parser_name=parser_name,
+            display_name=self.display_name,  # Add display_name to the health record
             last_run=datetime.now(),
             success=success,
             events_parsed=len(events),
