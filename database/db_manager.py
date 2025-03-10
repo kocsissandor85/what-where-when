@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database.models import Base, Event, ParserMetadata, Tag, ParserTag
+from database.models import Base, Event, ParserMetadata, Tag, ParserTag, TagMapping
 from datetime import datetime, timedelta
 from sqlalchemy.orm import joinedload
 from utils.logger import logger
@@ -203,3 +203,28 @@ class DBManager:
     def close(self):
         """Close the database session."""
         self.session.close()
+
+    def get_tag_mappings(self):
+        """Get all tag mappings."""
+        return self.session.query(TagMapping).all()
+
+    def get_mapping_for_tag(self, tag_name):
+        """Get the display name for a given source tag."""
+        mapping = self.session.query(TagMapping).filter_by(source_tag=tag_name).first()
+        return mapping.display_tag if mapping else tag_name
+
+    def set_tag_mapping(self, source_tag, display_tag):
+        """Create or update a tag mapping."""
+        mapping = self.session.query(TagMapping).filter_by(source_tag=source_tag).first()
+        if not mapping:
+            mapping = TagMapping(source_tag=source_tag, display_tag=display_tag)
+            self.session.add(mapping)
+        else:
+            mapping.display_tag = display_tag
+        self.session.commit()
+        return mapping
+
+    def remove_tag_mapping(self, source_tag):
+        """Remove a tag mapping."""
+        self.session.query(TagMapping).filter_by(source_tag=source_tag).delete()
+        self.session.commit()

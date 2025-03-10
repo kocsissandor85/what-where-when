@@ -91,3 +91,11 @@ class ParserTag(Base):
         # Note: SQLite doesn't enforce this constraint, but other DBs will
         # This serves more as documentation for now
     )
+
+
+class TagMapping(Base):
+    __tablename__ = 'tag_mappings'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    source_tag = Column(String(100), nullable=False, unique=True)  # Original tag name from parser
+    display_tag = Column(String(100), nullable=False)  # Consolidated display name

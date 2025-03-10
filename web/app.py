@@ -40,6 +40,8 @@ def index():
 def get_events():
     """Get all events with optional filtering."""
     session = Session()
+    db_manager = DBManager(DATABASE_URL)
+
     try:
         # Get query parameters
         filter_text = request.args.get('filter', '')
@@ -54,10 +56,27 @@ def get_events():
         query = session.query(Event).outerjoin(Event.dates)
 
         # Apply tag filter if provided
+
         if tag_filter:
-            query = query.join(event_tags, Event.id == event_tags.c.event_id) \
-                .join(Tag, Tag.id == event_tags.c.tag_id) \
-                .filter(Tag.name == tag_filter)
+            # First check if this is a display tag with mappings
+            mapped_source_tags = []
+            tag_mappings = db_manager.get_tag_mappings()
+
+            for mapping in tag_mappings:
+                if mapping.display_tag == tag_filter:
+                    mapped_source_tags.append(mapping.source_tag)
+
+            if mapped_source_tags:
+                # Filter by any of the source tags that map to the requested display tag
+                tag_filter_conditions = [Tag.name == source_tag for source_tag in mapped_source_tags]
+                query = query.join(event_tags, Event.id == event_tags.c.event_id) \
+                    .join(Tag, Tag.id == event_tags.c.tag_id) \
+                    .filter(or_(*tag_filter_conditions))
+            else:
+                # Filter by exact tag name (for unmapped tags)
+                query = query.join(event_tags, Event.id == event_tags.c.event_id) \
+                    .join(Tag, Tag.id == event_tags.c.tag_id) \
+                    .filter(Tag.name == tag_filter)
 
         # Apply other filters
         if filter_text:
@@ -129,9 +148,11 @@ def get_events():
 
                 # Add tags
                 for tag in event.tags:
+                    display_name = db_manager.get_mapping_for_tag(tag.name)
                     event_dict['tags'].append({
                         'id': tag.id,
-                        'name': tag.name
+                        'name': tag.name,
+                        'display_name': display_name
                     })
 
                 events.append(event_dict)
@@ -361,16 +382,88 @@ def get_parser_error_details(parser_name):
 
 @app.route('/api/tags')
 def get_tags():
-    """Get all available tags."""
     session = Session()
+    db_manager = DBManager(DATABASE_URL)
     try:
         tags = session.query(Tag).order_by(Tag.name).all()
-        tag_list = [{'id': tag.id, 'name': tag.name} for tag in tags]
+        tag_list = []
+
+        # Group tags by display name
+        display_tags = {}
+
+        for tag in tags:
+            display_name = db_manager.get_mapping_for_tag(tag.name)
+
+            if display_name not in display_tags:
+                display_tags[display_name] = {
+                    'display_name': display_name,
+                    'source_tags': []
+                }
+
+            display_tags[display_name]['source_tags'].append({
+                'id': tag.id,
+                'name': tag.name
+            })
+
+        # Convert to list for response
+        tag_list = list(display_tags.values())
+
         return jsonify(tag_list)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     finally:
         session.close()
+        db_manager.close()
+
+
+@app.route('/api/tags/mappings', methods=['GET'])
+def get_tag_mappings():
+    """Get all tag mappings."""
+    db_manager = DBManager(DATABASE_URL)
+    try:
+        mappings = db_manager.get_tag_mappings()
+        result = [{'source_tag': m.source_tag, 'display_tag': m.display_tag} for m in mappings]
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        db_manager.close()
+
+
+@app.route('/api/tags/mappings', methods=['POST'])
+def create_tag_mapping():
+    """Create or update a tag mapping."""
+    db_manager = DBManager(DATABASE_URL)
+    try:
+        data = request.json
+        source_tag = data.get('source_tag')
+        display_tag = data.get('display_tag')
+
+        if not source_tag or not display_tag:
+            return jsonify({'error': 'Missing source_tag or display_tag'}), 400
+
+        mapping = db_manager.set_tag_mapping(source_tag, display_tag)
+        return jsonify({
+            'source_tag': mapping.source_tag,
+            'display_tag': mapping.display_tag
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        db_manager.close()
+
+
+@app.route('/api/tags/mappings/<path:source_tag>', methods=['DELETE'])
+def delete_tag_mapping(source_tag):
+    """Delete a tag mapping."""
+    db_manager = DBManager(DATABASE_URL)
+    try:
+        db_manager.remove_tag_mapping(source_tag)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        db_manager.close()
 
 
 if __name__ == '__main__':
