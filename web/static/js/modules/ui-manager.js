@@ -214,11 +214,88 @@ export class UIManager {
         <input type="checkbox" name="eventCheckbox" class="form-check-input" 
                value="${event.id}" onchange="updateActionButtons()">
       </td>
-      <td class="fw-semibold">${this.escapeHTML(event.title)}</td>
-      <td>${this.escapeHTML(this.truncateText(event.description, 100))}</td>
-      <td>${this.escapeHTML(event.location)}</td>
+      <td>
+        <div class="event-details">
+          <div class="event-tags mb-1">${tagsHtml || '<span class="text-muted small">No tags</span>'}</div>
+          <div class="event-title fw-semibold">${this.escapeHTML(event.title)}</div>
+          <div class="event-description small text-muted">${this.escapeHTML(event.description)}</div>
+          <div class="event-location small">${this.escapeHTML(event.location)}</div>
+        </div>
+      </td>
       <td>${dateStrings.join('<br>')}</td>
-      <td class="tags-cell">${tagsHtml}</td>
+      <td>
+        <span class="badge ${event.archived ? 'bg-secondary' : 'bg-success'}">${status}</span>
+      </td>
+      <td>
+        <div class="btn-group">
+          <a href="${event.url}" class="btn btn-sm btn-outline-primary" target="_blank">
+            <i class="bi bi-box-arrow-up-right"></i>
+          </a>
+          ${!event.archived ?
+        `<button class="btn btn-sm btn-outline-secondary archive-btn" data-event-id="${event.id}">
+              <i class="bi bi-archive"></i>
+            </button>` : ''}
+          <button class="btn btn-sm btn-outline-danger delete-btn" data-event-id="${event.id}">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+      </td>
+    `;
+
+      this.elements.eventsTableBody.appendChild(row);
+    });
+
+    // Add event listeners for action buttons
+    this.addEventListeners();
+
+    this.elements.noEventsMessage.classList.add('d-none');
+  }  renderEvents(events, includeArchived, tagManager) {
+    this.elements.eventsTableBody.innerHTML = '';
+
+    if (events.length === 0) {
+      this.showNoEvents();
+      return;
+    }
+
+    events.forEach(event => {
+      const row = document.createElement('tr');
+      row.setAttribute('data-event-id', event.id);
+      row.className = event.archived ? 'table-secondary' : '';
+
+      // Format dates for display
+      const dateStrings = event.dates.map(date => {
+        let dateStr = this.dateUtils.formatDate(date.date);
+        if (date.time) {
+          dateStr += ` ${date.time}`;
+        }
+        if (date.end_date) {
+          dateStr += ` - ${this.dateUtils.formatDate(date.end_date)}`;
+          if (date.end_time) {
+            dateStr += ` ${date.end_time}`;
+          }
+        }
+        return dateStr;
+      });
+
+      const status = event.archived ? 'Archived' : 'Active';
+
+      // Prepare the tags HTML using the TagManager
+      const tagsHtml = tagManager ? tagManager.renderEventTags(event.tags) : '';
+
+      row.innerHTML = `
+      <td>
+        <input type="checkbox" name="eventCheckbox" class="form-check-input" 
+               value="${event.id}" onchange="updateActionButtons()">
+      </td>
+      <td>
+        <div class="event-details">
+          <div class="event-title fw-semibold">${this.escapeHTML(event.title)}</div>
+          <div class="event-description text-muted">${this.escapeHTML(event.description)}</div>
+          <div class="event-location small">${this.escapeHTML(event.location)}</div>
+          <div class="event-tags">${tagsHtml}</div>
+        </div>
+      </td>
+      <td>${dateStrings.join('<br>')}</td>
       <td><span class="badge ${event.archived ? 'bg-secondary' : 'bg-success'}">${status}</span></td>
       <td>
         <div class="btn-group">

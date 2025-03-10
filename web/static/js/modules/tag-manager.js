@@ -100,7 +100,7 @@ export class TagManager {
     }
 
     return tags.map(tag => `
-      <span class="badge bg-secondary me-1">${this.escapeHTML(tag.display_name)}</span>
+      <span class="badge bg-info">${this.escapeHTML(tag.display_name)}</span>
     `).join('');
   }
 

@@ -33,13 +33,21 @@ body {
 }
 
 /* Table styling - Apply to all tables consistently */
+.table-container {
+  padding: 0;
+}
+
 .table {
-  margin-bottom: 0;
+  margin-bottom: .5rem;
+}
+
+tr:last-child td {
+  border-bottom: 0;
 }
 
 .table th,
 .table td {
-  padding: 0.75rem;
+  padding: 1rem;
   vertical-align: middle;
 }
 
@@ -75,12 +83,6 @@ td:nth-child(3) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-/* Add some spacing to the badge */
-.badge {
-  padding: 0.5em 0.6em;
-  font-weight: 500;
 }
 
 /* Make checkboxes a bit larger */
@@ -168,22 +170,9 @@ td:nth-child(3) {
   padding: 0.75rem 1rem;
 }
 
-/* Ensure consistent padding for all table cells */
-.table th,
-.table td {
-  padding: 0.75rem;
-}
-
 /* Remove column width limit for error buttons */
 #parserHealthTable td:last-child {
   white-space: nowrap;
-}
-
-/* Parser status badges */
-.badge {
-  font-size: 0.825rem;
-  font-weight: 500;
-  padding: 0.35em 0.65em;
 }
 
 /* Error modal styling */
@@ -285,4 +274,31 @@ table td:last-child {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+/* Event details nested layout */
+.event-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.event-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.event-title {
+  margin-bottom: 0.25rem;
+}
+
+.event-description {
+  overflow: auto;
+  text-overflow: ellipsis;
+  margin-bottom: 0.25rem;
+}
+
+.event-location {
+  margin-bottom: 1rem;
 }
