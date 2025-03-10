@@ -53,6 +53,25 @@ class BaseParser(ABC):
             if tag not in event.tags:
                 event.tags.append(tag)
 
+    def apply_event_specific_tags(self, event, db_session):
+        """Apply event-specific tags that were extracted during parsing."""
+        # Check if the event has tag names attached from the parser
+        if hasattr(event, '_tag_names') and event._tag_names:
+            for tag_name in event._tag_names:
+                # Get or create the tag
+                tag = db_session.query(Tag).filter_by(name=tag_name).first()
+                if not tag:
+                    tag = Tag(name=tag_name)
+                    db_session.add(tag)
+                    db_session.flush()
+
+                # Add tag to the event if not already present
+                if tag not in event.tags:
+                    event.tags.append(tag)
+
+            # Clean up the temporary attribute
+            delattr(event, '_tag_names')
+
     def run_with_error_handling(self, db_session):
         """
         Run the parser with error handling and health logging.
@@ -74,7 +93,11 @@ class BaseParser(ABC):
 
             # Apply automatic tags to all events
             for event in events:
+                # Apply automatic venue tags
                 self.apply_automatic_tags(event, db_session)
+
+                # Apply event-specific tags if any were extracted
+                self.apply_event_specific_tags(event, db_session)
 
             logger.info(f"Parser {parser_name} completed successfully. Found {len(events)} events.")
         except Exception as e:

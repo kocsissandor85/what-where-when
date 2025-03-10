@@ -27,6 +27,7 @@ def empty_database():
         trans = connection.begin()
 
         # Delete all data from each table in reverse order to avoid foreign key constraints
+        # Ensure the association tables (event_tags) are cleared first before the main tables
         for table_name in reversed(metadata.sorted_tables):
             logger.info(f"Emptying table: {table_name}")
             connection.execute(table_name.delete())

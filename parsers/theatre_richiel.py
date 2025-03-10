@@ -4,7 +4,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from datetime import datetime
-from database.models import Event, EventDate
+from database.models import Event, EventDate, Tag
 from parsers.base_parser import BaseParser
 from database.db_manager import DBManager
 from utils.config import DATABASE_URL
@@ -15,6 +15,9 @@ class RichelParser(BaseParser):
 
     # Add human-readable display name
     display_name = "Theater de Richel"
+
+    # Set automatic tags for all events from this venue
+    automatic_tags = []
 
     def __init__(self):
         # Set up Selenium WebDriver
@@ -71,11 +74,9 @@ class RichelParser(BaseParser):
             try:
                 event = self.parse_event(item)
                 if event:
-                    # Get the event date (assuming the first date in the list)
-                    event_date = event.dates[0].date if event.dates else None
-
-                    if self.db_manager.check_event_exists(event.title, event_date):
-                        print(f"Event already exists: {event.title} on {event_date}.")
+                    # Check if the event already exists
+                    if self.db_manager.check_event_exists(event.title):
+                        print(f"Event already exists: {event.title}.")
                         continue
 
                     events.append(event)
@@ -114,7 +115,7 @@ class RichelParser(BaseParser):
             # Static location
             location = "Theater de Richel"
 
-            # Create Event object without date_time, instead using EventDate for date handling
+            # Create Event object
             event = Event(
                 title=title,
                 description=description,
@@ -127,10 +128,39 @@ class RichelParser(BaseParser):
             if date_time:
                 event.dates = [EventDate(date=date_time)]
 
+            # Extract tags (but don't add them yet - we'll let the BaseParser handle this)
+            event_tags = self.extract_tags(item)
+            if event_tags:
+                # Store tag names as an attribute on the event for later processing
+                # This avoids session conflicts by not creating Tag objects here
+                event._tag_names = event_tags
+
             return event
         except Exception as e:
             print(f"Error parsing event: {e}")
             return None
+
+    def extract_tags(self, item):
+        """Extract tags from the event item."""
+        tags = []
+        try:
+            # Find the tag container
+            tag_container = item.find("div", class_="jet-listing-dynamic-terms")
+
+            if tag_container:
+                # Find all tag links - these contain the tag names
+                tag_links = tag_container.find_all("span", class_="jet-listing-dynamic-terms__link")
+
+                # Extract the text from each tag link
+                for tag_link in tag_links:
+                    tag_name = tag_link.get_text(strip=True)
+                    if tag_name:
+                        tags.append(tag_name)
+
+            return tags
+        except Exception as e:
+            print(f"Error extracting tags: {e}")
+            return []
 
     def parse_date_time(self, date_text):
         """
